@@ -60,7 +60,7 @@ PythonEditor::PythonEditor(GenericProcessor* parentNode, bool useDefaultParamete
 
     desiredWidth = 180;
 
-    setEnabledState(false);
+    //setEnabledState(false);
 
 }
 

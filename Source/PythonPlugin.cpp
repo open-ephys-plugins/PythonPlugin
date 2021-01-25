@@ -690,9 +690,9 @@ static PyThreadState *startInterpreter()
 #endif
     }
 
-#ifdef PYTHON_DEBUG
+// #ifdef PYTHON_DEBUG
     std::cout << "PYTHON_HOME: " << getenv("PYTHON_HOME") << std::endl;
-#endif
+// #endif
 
 #ifdef _WIN32
     // set PYTHONPATH to avoid error described here: https://stackoverflow.com/questions/5694706/py-initialize-fails-unable-to-load-the-file-system-codec

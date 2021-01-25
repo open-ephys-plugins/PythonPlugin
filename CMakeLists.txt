@@ -30,21 +30,6 @@ set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS
 	$<$<CONFIG:Release>:NDEBUG=1>
 	)
 
-# Find Python. Users can specify by providing the following in the call to cmake:
-    # -DPYTHON_EXECUTABLE
-    # -DPYTHON_LIBRARIES
-    # -DPYTHON_INCLUDE_DIRS
-    # -DPYTHON_HOME
-find_package(PythonInterp REQUIRED)
-find_package(PythonLibs REQUIRED)
-#set(PYTHON_HOME $ENV{CONDA_PREFIX} CACHE PATH "Where is the root of your python installation?")
-set(PYTHON_HOME $ENV{CONDA_HOME} CACHE PATH "Where is the root of your python installation?")
-get_filename_component(PYTHON_LIB_DIR ${PYTHON_LIBRARIES} DIRECTORY)
-message(STATUS "Python home: " ${PYTHON_HOME})
-message(STATUS "Python executable: " ${PYTHON_EXECUTABLE})
-message(STATUS "Python library: " ${PYTHON_LIBRARIES})
-message(STATUS "Python lib dir: " ${PYTHON_LIB_DIR})
-message(STATUS "Python include dir: " ${PYTHON_INCLUDE_DIRS})
 
 # extend PYTHONPATH to include python_modules
 if(WIN32)
@@ -92,10 +77,6 @@ if (NOT CMAKE_LIBRARY_ARCHITECTURE)
 		set(CMAKE_LIBRARY_ARCHITECTURE "x86")
 	endif()
 endif()
-
-# link libraries
-target_link_libraries(${PLUGIN_NAME} ${PYTHON_LIBRARIES})
-target_include_directories(${PLUGIN_NAME} PRIVATE ${PYTHON_INCLUDE_DIRS})
 
 # preprocessor definitions
 add_definitions(-DOEPLUGIN)
@@ -146,24 +127,48 @@ if(APPLE)
 elseif(LINUX)
     target_link_libraries(${PLUGIN_NAME} GL X11 Xext Xinerama asound dl freetype pthread rt)
 	set_property(TARGET ${PLUGIN_NAME} APPEND_STRING PROPERTY LINK_FLAGS
-		"-fvisibility=hidden -fPIC -rdynamic -Wl,-rpath,'$$ORIGIN/../shared'")
+		"-fvisibility=hidden -fPIC -rdynamic -Wl,-rpath,'$ORIGIN/../shared'")
 	target_compile_options(${PLUGIN_NAME} PRIVATE -fPIC -rdynamic)
 	target_compile_options(${PLUGIN_NAME} PRIVATE -O3) #enable optimization for linux debug
 	
 	install(TARGETS ${PLUGIN_NAME} LIBRARY DESTINATION ${GUI_BIN_DIR}/plugins)
 elseif(WIN32)
-    add_definitions(-DPYTHON_HOME_NAME="C:\/Anaconda3")
+    add_definitions(-DPYTHON_HOME_NAME="C:/Users/anjal/.conda/envs/oeEnv")
     target_link_libraries(${PLUGIN_NAME} ${GUI_BIN_DIR}/open-ephys.lib)
 	target_compile_options(${PLUGIN_NAME} PRIVATE /sdl-)
 	
 	install(TARGETS ${PLUGIN_NAME} RUNTIME DESTINATION ${GUI_BIN_DIR}/plugins  CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
 
-    set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../libs)
+    list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/libs/windows)
 
 
     # target_link_libraries(${PLUGIN_NAME} debug ${LIBSERIAL_LIBRARIES} "setupapi.lib" )
     # target_link_libraries(${PLUGIN_NAME} optimized ${LIBSERIAL_LIBRARIES} "setupapi.lib")
 endif()
+
+# Find Python. Users can specify by providing the following in the call to cmake:
+# -DPYTHON_EXECUTABLE
+# -DPYTHON_LIBRARIES
+# -DPYTHON_INCLUDE_DIRS
+# -DPYTHON_HOME
+find_package(PythonInterp 3.6 REQUIRED)
+find_package(PythonLibs 3.6 EXACT REQUIRED)
+#set(PYTHON_HOME $ENV{CONDA_PREFIX} CACHE PATH "Where is the root of your python installation?")
+# set(PYTHON_HOME $ENV{CONDA_HOME} CACHE PATH "Where is the root of your python installation?")
+get_filename_component(PYTHON_LIB_DIR ${PYTHON_LIBRARIES} DIRECTORY)
+message(STATUS "Python home: " ${PYTHON_HOME})
+message(STATUS "Python executable: " ${PYTHON_EXECUTABLE})
+message(STATUS "Python library: " ${PYTHON_LIBRARIES})
+message(STATUS "Python lib dir: " ${PYTHON_LIB_DIR})
+message(STATUS "Python include dir: " ${PYTHON_INCLUDE_DIRS})
+
+if (MSVC)
+	install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/windows/bin/ DESTINATION ${GUI_BIN_DIR}/shared CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
+endif()
+
+# link libraries
+target_link_libraries(${PLUGIN_NAME} ${PYTHON_LIBRARIES})
+target_include_directories(${PLUGIN_NAME} PRIVATE ${PYTHON_INCLUDE_DIRS})
 
 foreach( src_file IN ITEMS ${SRC_FILES})
 	get_filename_component(src_path "${src_file}" PATH)
